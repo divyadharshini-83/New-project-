@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Job Triangle — Application Tracker</title>
+<style>
+  :root{
+    --navy-950:#0a1628;
+    --navy-900:#0f2038;
+    --navy-800:#152b4a;
+    --navy-700:#1d3a5f;
+    --teal-500:#2dd4bf;
+    --teal-600:#14b8a6;
+    --teal-glow:rgba(45,212,191,0.18);
+    --gold-400:#e8b84b;
+    --gold-500:#d4a017;
+    --paper:#f4f7f9;
+    --ink:#e8edf2;
+    --ink-dim:#9fb2c7;
+    --line:rgba(255,255,255,0.08);
+    --danger:#e0665f;
+    --radius:10px;
+    --font-display:'Fraunces', Georgia, serif;
+    --font-body:'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-mono:'JetBrains Mono', 'Courier New', monospace;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(ellipse 1200px 600px at 15% -10%, var(--teal-glow), transparent 60%),
+      radial-gradient(ellipse 900px 500px at 100% 0%, rgba(212,160,23,0.10), transparent 55%),
+      var(--navy-950);
+    color:var(--ink);
+    font-family:var(--font-body);
+    min-height:100vh;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  @font-face{
+    font-family:'Fraunces';
+    src:local('Georgia');
+  }
+
+  a{color:var(--teal-500);}
+
+  .wrap{
+    max-width:1080px;
+    margin:0 auto;
+    padding:48px 28px 80px;
+  }
+
+  /* ===== Header / signature triangle ===== */
+  header.top{
+    display:flex;
+    align-items:center;
+    gap:22px;
+    margin-bottom:8px;
+  }
+
+  .mark{
+    width:46px;height:46px;flex:0 0 auto;
+  }
+
+  .brand-block h1{
+    font-family:var(--font-display);
+    font-weight:600;
+    font-size:2.1rem;
+    letter-spacing:-0.01em;
+    margin:0;
+    color:#fff;
+  }
+  .brand-block h1 .accent{color:var(--teal-500);}
+  .brand-block p.tag{
+    margin:2px 0 0;
+    color:var(--ink-dim);
+    font-size:0.92rem;
+    font-family:var(--font-mono);
+    letter-spacing:0.02em;
+  }
+
+  .stage-rail{
+    margin:30px 0 38px;
+    display:grid;
+    grid-template-columns:repeat(5,1fr);
+    gap:0;
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    overflow:hidden;
+    background:var(--navy-900);
+  }
+  .stage-cell{
+    padding:14px 10px;
+    text-align:center;
+    border-right:1px solid var(--line);
+    position:relative;
+  }
+  .stage-cell:last-child{border-right:none;}
+  .stage-cell .n{
+    font-family:var(--font-display);
+    font-size:1.6rem;
+    font-weight:600;
+    color:#fff;
+    display:block;
+    line-height:1;
+  }
+  .stage-cell .lbl{
+    font-size:0.7rem;
+    text-transform:uppercase;
+    letter-spacing:0.09em;
+    color:var(--ink-dim);
+    display:block;
+    margin-top:6px;
+  }
+  .stage-cell.applied .n{color:var(--ink-dim);}
+  .stage-cell.screening .n{color:var(--teal-500);}
+  .stage-cell.interview .n{color:var(--teal-500);}
+  .stage-cell.offer .n{color:var(--gold-400);}
+  .stage-cell.closed .n{color:var(--danger);}
+
+  /* ===== panels ===== */
+  .panel{
+    background:var(--navy-900);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:26px;
+    margin-bottom:26px;
+  }
+  .panel h2{
+    font-family:var(--font-display);
+    font-size:1.15rem;
+    font-weight:600;
+    margin:0 0 18px;
+    color:#fff;
+    display:flex;
+    align-items:center;
+    gap:9px;
+  }
+  .panel h2::before{
+    content:"";
+    width:9px;height:9px;
+    background:var(--teal-500);
+    display:inline-block;
+    clip-path:polygon(50% 0%, 0% 100%, 100% 100%);
+  }
+
+  form#addForm{
+    display:grid;
+    grid-template-columns:1.4fr 1.2fr 1fr 1fr 1fr auto;
+    gap:12px;
+    align-items:end;
+  }
+  .field{display:flex;flex-direction:column;gap:6px;}
+  .field label{
+    font-size:0.7rem;
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+    color:var(--ink-dim);
+  }
+  input,select,textarea{
+    background:var(--navy-800);
+    border:1px solid var(--line);
+    color:var(--ink);
+    padding:10px 11px;
+    border-radius:7px;
+    font-family:var(--font-body);
+    font-size:0.9rem;
+    outline:none;
+    transition:border-color .15s, box-shadow .15s;
+    width:100%;
+  }
+  input:focus,select:focus,textarea:focus{
+    border-color:var(--teal-500);
+    box-shadow:0 0 0 3px var(--teal-glow);
+  }
+  input::placeholder{color:#5c7189;}
+
+  select{appearance:none;cursor:pointer;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6'><path d='M0 0 L5 6 L10 0 Z' fill='%239fb2c7'/></svg>");
+    background-repeat:no-repeat;background-position:right 12px center;padding-right:28px;
+  }
+  option{background:var(--navy-800);color:var(--ink);}
+
+  button.primary{
+    background:var(--teal-600);
+    color:var(--navy-950);
+    border:none;
+    font-weight:700;
+    padding:11px 20px;
+    border-radius:7px;
+    cursor:pointer;
+    font-size:0.88rem;
+    letter-spacing:0.02em;
+    transition:background .15s, transform .1s;
+    white-space:nowrap;
+  }
+  button.primary:hover{background:var(--teal-500);}
+  button.primary:active{transform:translateY(1px);}
+
+  /* ===== table ===== */
+  .table-tools{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:16px;
+    gap:12px;
+    flex-wrap:wrap;
+  }
+  .table-tools .count{
+    font-family:var(--font-mono);
+    font-size:0.82rem;
+    color:var(--ink-dim);
+  }
+  .table-tools .count strong{color:var(--gold-400);}
+  .sort-controls{display:flex;gap:8px;align-items:center;font-size:0.82rem;color:var(--ink-dim);}
+  .sort-controls select{width:auto;padding:7px 26px 7px 10px;font-size:0.82rem;}
+
+  .table-scroll{overflow-x:auto;border-radius:8px;border:1px solid var(--line);}
+  table{width:100%;border-collapse:collapse;min-width:760px;}
+  thead th{
+    text-align:left;
+    font-size:0.68rem;
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+    color:var(--ink-dim);
+    padding:12px 14px;
+    background:var(--navy-800);
+    border-bottom:1px solid var(--line);
+    cursor:pointer;
+    user-select:none;
+    white-space:nowrap;
+  }
+  thead th:hover{color:var(--teal-500);}
+  thead th.active-sort{color:var(--teal-500);}
+  thead th .arrow{opacity:0.6;margin-left:3px;font-size:0.7em;}
+
+  tbody tr{
+    border-bottom:1px solid var(--line);
+    transition:background .12s;
+  }
+  tbody tr:hover{background:rgba(255,255,255,0.02);}
+  tbody tr:last-child{border-bottom:none;}
+  td{padding:12px 14px;font-size:0.87rem;vertical-align:top;}
+  td.company{font-weight:600;color:#fff;}
+  td.role{color:var(--ink-dim);}
+  td .src-tag{
+    font-family:var(--font-mono);
+    font-size:0.72rem;
+    color:var(--ink-dim);
+    background:var(--navy-800);
+    padding:3px 8px;
+    border-radius:20px;
+    border:1px solid var(--line);
+    white-space:nowrap;
+  }
+
+  .status-pill{
+    position:relative;
+  }
+  select.status-select{
+    padding:6px 26px 6px 12px;
+    font-size:0.78rem;
+    border-radius:20px;
+    font-weight:600;
+    width:auto;
+    border:1px solid transparent;
+  }
+  select.status-select.st-applied{background:var(--navy-800);color:var(--ink-dim);border-color:var(--line);}
+  select.status-select.st-screening{background:rgba(45,212,191,0.12);color:var(--teal-500);border-color:rgba(45,212,191,0.35);}
+  select.status-select.st-interview{background:rgba(45,212,191,0.22);color:#7ee8dc;border-color:var(--teal-500);}
+  select.status-select.st-offer{background:rgba(212,160,23,0.16);color:var(--gold-400);border-color:var(--gold-500);}
+  select.status-select.st-closed{background:rgba(224,102,95,0.12);color:var(--danger);border-color:rgba(224,102,95,0.4);}
+
+  textarea.note-input{
+    min-height:34px;
+    max-height:120px;
+    resize:vertical;
+    font-size:0.82rem;
+    padding:7px 9px;
+  }
+
+  .row-actions{display:flex;gap:6px;}
+  .icon-btn{
+    background:transparent;
+    border:1px solid var(--line);
+    color:var(--ink-dim);
+    width:30px;height:30px;
+    border-radius:6px;
+    cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    transition:all .15s;
+    font-size:0.85rem;
+  }
+  .icon-btn:hover{border-color:var(--danger);color:var(--danger);}
+
+  .empty-state{
+    text-align:center;
+    padding:50px 20px;
+    color:var(--ink-dim);
+  }
+  .empty-state .tri{
+    width:34px;height:34px;margin:0 auto 14px;
+    border:2px solid var(--teal-500);
+    clip-path:polygon(50% 0%, 0% 100%, 100% 100%);
+    opacity:0.5;
+  }
+  .empty-state p{margin:4px 0;font-size:0.9rem;}
+  .empty-state .sub{font-size:0.78rem;color:#5c7189;}
+
+  footer{
+    text-align:center;
+    color:#5c7189;
+    font-size:0.75rem;
+    margin-top:36px;
+    font-family:var(--font-mono);
+  }
+
+  @media (max-width:760px){
+    form#addForm{grid-template-columns:1fr 1fr;}
+    form#addForm .field:nth-child(5){grid-column:1/-1;}
+    .stage-rail{grid-template-columns:repeat(3,1fr);}
+    .stage-cell:nth-child(4),.stage-cell:nth-child(5){border-top:1px solid var(--line);}
+  }
+
+  @media (prefers-reduced-motion:reduce){
+    *{transition:none !important;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <svg class="mark" viewBox="0 0 46 46" xmlns="http://www.w3.org/2000/svg">
+      <polygon points="23,4 42,40 4,40" fill="none" stroke="#2dd4bf" stroke-width="2.2"/>
+      <polygon points="23,17 33,36 13,36" fill="none" stroke="#d4a017" stroke-width="2"/>
+      <circle cx="23" cy="4" r="2.4" fill="#2dd4bf"/>
+      <circle cx="42" cy="40" r="2.4" fill="#e8edf2" opacity="0.6"/>
+      <circle cx="4" cy="40" r="2.4" fill="#e8edf2" opacity="0.6"/>
+    </svg>
+    <div class="brand-block">
+      <h1>Job <span class="accent">Triangle</span></h1>
+      <p class="tag">applied → interviewed → offered — three points, one pipeline</p>
+    </div>
+  </header>
+
+  <div class="stage-rail" id="stageRail">
+    <div class="stage-cell applied"><span class="n" id="cntApplied">0</span><span class="lbl">Applied</span></div>
+    <div class="stage-cell screening"><span class="n" id="cntScreening">0</span><span class="lbl">Screening</span></div>
+    <div class="stage-cell interview"><span class="n" id="cntInterview">0</span><span class="lbl">Interview</span></div>
+    <div class="stage-cell offer"><span class="n" id="cntOffer">0</span><span class="lbl">Offer</span></div>
+    <div class="stage-cell closed"><span class="n" id="cntClosed">0</span><span class="lbl">Closed</span></div>
+  </div>
+
+  <section class="panel">
+    <h2>Add an application</h2>
+    <form id="addForm">
+      <div class="field">
+        <label for="f-company">Company</label>
+        <input type="text" id="f-company" placeholder="e.g. Bosch" required>
+      </div>
+      <div class="field">
+        <label for="f-role">Role</label>
+        <input type="text" id="f-role" placeholder="e.g. Embedded Systems Intern" required>
+      </div>
+      <div class="field">
+        <label for="f-date">Date applied</label>
+        <input type="date" id="f-date" required>
+      </div>
+      <div class="field">
+        <label for="f-source">Source</label>
+        <select id="f-source">
+          <option value="Referral">Referral</option>
+          <option value="Job Portal">Job Portal</option>
+          <option value="LinkedIn">LinkedIn</option>
+          <option value="Direct">Direct</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="f-status">Status</label>
+        <select id="f-status">
+          <option value="Applied">Applied</option>
+          <option value="Screening">Screening</option>
+          <option value="Interview">Interview</option>
+          <option value="Offer">Offer</option>
+          <option value="Closed">Closed</option>
+        </select>
+      </div>
+      <button type="submit" class="primary">+ Add</button>
+    </form>
+  </section>
+
+  <section class="panel">
+    <div class="table-tools">
+      <div class="count"><strong id="totalCount">0</strong> applications tracked</div>
+      <div class="sort-controls">
+        Sort by
+        <select id="sortField">
+          <option value="date">Date applied</option>
+          <option value="status">Status</option>
+          <option value="company">Company</option>
+        </select>
+        <select id="sortDir">
+          <option value="desc">Newest / Z→A first</option>
+          <option value="asc">Oldest / A→Z first</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th data-key="company">Company <span class="arrow"></span></th>
+            <th data-key="role">Role <span class="arrow"></span></th>
+            <th data-key="date">Date applied <span class="arrow"></span></th>
+            <th data-key="source">Source <span class="arrow"></span></th>
+            <th data-key="status">Status <span class="arrow"></span></th>
+            <th>Note</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <div class="empty-state" id="emptyState" style="display:none;">
+      <div class="tri"></div>
+      <p>No applications yet.</p>
+      <p class="sub">Add your first one above — it'll show up here instantly.</p>
+    </div>
+  </section>
+
+  <footer>Job Triangle — stored locally in this browser only. Clearing site data will clear your list.</footer>
+</div>
+
+<script>
+(function(){
+  const STORAGE_KEY = 'jobTriangle.applications.v1';
+  const tbody = document.getElementById('tbody');
+  const emptyState = document.getElementById('emptyState');
+  const totalCount = document.getElementById('totalCount');
+  const sortFieldEl = document.getElementById('sortField');
+  const sortDirEl = document.getElementById('sortDir');
+  const theadRow = document.querySelector('thead tr');
+
+  let apps = load();
+  let sortState = { field: 'date', dir: 'desc' };
+
+  function load(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : [];
+    }catch(e){ return []; }
+  }
+  function save(){
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(apps));
+  }
+  function uid(){
+    return 'a' + Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+  }
+
+  const STATUS_ORDER = ['Applied','Screening','Interview','Offer','Closed'];
+  const STATUS_CLASS = {
+    'Applied':'st-applied','Screening':'st-screening','Interview':'st-interview',
+    'Offer':'st-offer','Closed':'st-closed'
+  };
+
+  function fmtDate(iso){
+    if(!iso) return '—';
+    const d = new Date(iso + 'T00:00:00');
+    if(isNaN(d)) return iso;
+    return d.toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
+  }
+
+  function sortApps(list){
+    const {field, dir} = sortState;
+    const mul = dir === 'asc' ? 1 : -1;
+    return [...list].sort((a,b)=>{
+      let av, bv;
+      if(field === 'date'){ av = a.date || ''; bv = b.date || ''; }
+      else if(field === 'status'){ av = STATUS_ORDER.indexOf(a.status); bv = STATUS_ORDER.indexOf(b.status); }
+      else { av = (a.company||'').toLowerCase(); bv = (b.company||'').toLowerCase(); }
+      if(av < bv) return -1 * mul;
+      if(av > bv) return 1 * mul;
+      return 0;
+    });
+  }
+
+  function updateStageCounts(){
+    const counts = { Applied:0, Screening:0, Interview:0, Offer:0, Closed:0 };
+    apps.forEach(a => { if(counts[a.status] !== undefined) counts[a.status]++; });
+    document.getElementById('cntApplied').textContent = counts.Applied;
+    document.getElementById('cntScreening').textContent = counts.Screening;
+    document.getElementById('cntInterview').textContent = counts.Interview;
+    document.getElementById('cntOffer').textContent = counts.Offer;
+    document.getElementById('cntClosed').textContent = counts.Closed;
+  }
+
+  function updateSortArrows(){
+    theadRow.querySelectorAll('th[data-key]').forEach(th=>{
+      const arrow = th.querySelector('.arrow');
+      th.classList.remove('active-sort');
+      arrow.textContent = '';
+      if(th.dataset.key === sortState.field){
+        th.classList.add('active-sort');
+        arrow.textContent = sortState.dir === 'asc' ? '▲' : '▼';
+      }
+    });
+  }
+
+  function render(){
+    updateStageCounts();
+    totalCount.textContent = apps.length;
+    emptyState.style.display = apps.length ? 'none' : 'block';
+    tbody.innerHTML = '';
+    const sorted = sortApps(apps);
+    sorted.forEach(app => {
+      const tr = document.createElement('tr');
+
+      const tdCompany = document.createElement('td');
+      tdCompany.className = 'company';
+      tdCompany.textContent = app.company;
+      tr.appendChild(tdCompany);
+
+      const tdRole = document.createElement('td');
+      tdRole.className = 'role';
+      tdRole.textContent = app.role;
+      tr.appendChild(tdRole);
+
+      const tdDate = document.createElement('td');
+      tdDate.textContent = fmtDate(app.date);
+      tr.appendChild(tdDate);
+
+      const tdSource = document.createElement('td');
+      const srcTag = document.createElement('span');
+      srcTag.className = 'src-tag';
+      srcTag.textContent = app.source;
+      tdSource.appendChild(srcTag);
+      tr.appendChild(tdSource);
+
+      const tdStatus = document.createElement('td');
+      const statusSel = document.createElement('select');
+      statusSel.className = 'status-select ' + (STATUS_CLASS[app.status] || 'st-applied');
+      STATUS_ORDER.forEach(s=>{
+        const opt = document.createElement('option');
+        opt.value = s; opt.textContent = s;
+        if(s === app.status) opt.selected = true;
+        statusSel.appendChild(opt);
+      });
+      statusSel.addEventListener('change', ()=>{
+        app.status = statusSel.value;
+        statusSel.className = 'status-select ' + (STATUS_CLASS[app.status] || 'st-applied');
+        save();
+        updateStageCounts();
+      });
+      tdStatus.appendChild(statusSel);
+      tr.appendChild(tdStatus);
+
+      const tdNote = document.createElement('td');
+      const noteInput = document.createElement('textarea');
+      noteInput.className = 'note-input';
+      noteInput.placeholder = 'Add a note…';
+      noteInput.value = app.note || '';
+      noteInput.rows = 1;
+      let noteTimer;
+      noteInput.addEventListener('input', ()=>{
+        clearTimeout(noteTimer);
+        noteTimer = setTimeout(()=>{
+          app.note = noteInput.value;
+          save();
+        }, 300);
+      });
+      tdNote.appendChild(noteInput);
+      tr.appendChild(tdNote);
+
+      const tdActions = document.createElement('td');
+      const actionsWrap = document.createElement('div');
+      actionsWrap.className = 'row-actions';
+      const delBtn = document.createElement('button');
+      delBtn.className = 'icon-btn';
+      delBtn.title = 'Delete entry';
+      delBtn.innerHTML = '✕';
+      delBtn.addEventListener('click', ()=>{
+        if(confirm('Delete this application for ' + app.company + '?')){
+          apps = apps.filter(a => a.id !== app.id);
+          save();
+          render();
+        }
+      });
+      actionsWrap.appendChild(delBtn);
+      tdActions.appendChild(actionsWrap);
+      tr.appendChild(tdActions);
+
+      tbody.appendChild(tr);
+    });
+    updateSortArrows();
+  }
+
+  document.getElementById('addForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    const company = document.getElementById('f-company').value.trim();
+    const role = document.getElementById('f-role').value.trim();
+    const date = document.getElementById('f-date').value;
+    const source = document.getElementById('f-source').value;
+    const status = document.getElementById('f-status').value;
+    if(!company || !role || !date) return;
+
+    apps.push({ id: uid(), company, role, date, source, status, note: '' });
+    save();
+    render();
+    this.reset();
+    document.getElementById('f-company').focus();
+  });
+
+  theadRow.querySelectorAll('th[data-key]').forEach(th=>{
+    th.addEventListener('click', ()=>{
+      const key = th.dataset.key;
+      if(sortState.field === key){
+        sortState.dir = sortState.dir === 'asc' ? 'desc' : 'asc';
+      } else {
+        sortState.field = key;
+        sortState.dir = key === 'date' ? 'desc' : 'asc';
+      }
+      syncSortControls();
+      render();
+    });
+  });
+
+  sortFieldEl.addEventListener('change', ()=>{
+    sortState.field = sortFieldEl.value;
+    render();
+  });
+  sortDirEl.addEventListener('change', ()=>{
+    sortState.dir = sortDirEl.value;
+    render();
+  });
+
+  function syncSortControls(){
+    sortFieldEl.value = sortState.field;
+    sortDirEl.value = sortState.dir;
+  }
+
+  // default date = today
+  document.getElementById('f-date').value = new Date().toISOString().slice(0,10);
+
+  syncSortControls();
+  render();
+})();
+</script>
+</body>
+</html>

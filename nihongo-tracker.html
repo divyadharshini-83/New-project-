@@ -1,0 +1,1002 @@
+
+
+Nihongo tracker · HTML
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>継続 — Nihongo Companion</title>
+ 
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+ 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+ 
+<style>
+:root{
+  --washi:      #F3F0E8;
+  --washi-2:    #ECE7DA;
+  --sumi:       #232323;
+  --sumi-soft:  #55534C;
+  --ai:         #2B4570;
+  --ai-soft:    #5E7CA3;
+  --shu:        #BD4438;
+  --matcha:     #55724A;
+  --matcha-soft:#DCE6D4;
+  --gold:       #B08D3E;
+  --card:       #FBFAF6;
+  --border:     #DAD3C2;
+  --radius:     10px;
+  --shadow:     0 1px 2px rgba(35,35,35,0.06), 0 4px 14px rgba(35,35,35,0.05);
+  --serif: 'Shippori Mincho', serif;
+  --sans:  'Zen Kaku Gothic New', 'Noto Sans JP', sans-serif;
+}
+*{ box-sizing:border-box; }
+html,body{ margin:0; padding:0; }
+body{ background:var(--washi); color:var(--sumi); font-family:var(--sans); -webkit-font-smoothing:antialiased; }
+h1,h2,h3,.serif{ font-family:var(--serif); font-weight:700; letter-spacing:.01em; }
+button{ font-family:var(--sans); cursor:pointer; }
+input,select,textarea{ font-family:var(--sans); }
+ 
+.app-bg{
+  min-height:100vh;
+  background-image:
+    radial-gradient(circle at 20% 10%, rgba(43,69,112,0.035), transparent 40%),
+    radial-gradient(circle at 90% 80%, rgba(189,68,56,0.03), transparent 40%);
+}
+ 
+.shell{ display:flex; min-height:100vh; }
+.sidebar{
+  width:230px; flex-shrink:0; background:var(--card); border-right:1px solid var(--border);
+  padding:24px 14px; display:flex; flex-direction:column; gap:4px; position:sticky; top:0; height:100vh;
+}
+.brand{ padding:0 10px 20px 10px; }
+.brand .mark{ font-size:26px; color:var(--ai); }
+.brand .sub{ font-size:11.5px; color:var(--sumi-soft); letter-spacing:.06em; text-transform:uppercase; margin-top:2px; }
+ 
+.navbtn{
+  display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:8px; border:none;
+  background:transparent; color:var(--sumi-soft); font-size:14.5px; text-align:left; width:100%;
+  transition:background .15s ease, color .15s ease;
+}
+.navbtn:hover{ background:var(--washi-2); color:var(--sumi); }
+.navbtn.active{ background:var(--ai); color:#fff; }
+.navbtn .jp{ font-family:var(--serif); font-size:16px; width:22px; text-align:center; }
+ 
+.main{ flex:1; min-width:0; padding:28px 34px 80px; max-width:1180px; }
+.pagehead{ display:flex; align-items:baseline; justify-content:space-between; margin-bottom:22px; flex-wrap:wrap; gap:8px;}
+.pagehead h1{ font-size:26px; margin:0; }
+.pagehead .tagline{ color:var(--sumi-soft); font-size:13.5px; margin-top:4px; }
+.today-pill{ background:var(--ai); color:#fff; font-size:12.5px; padding:6px 12px; border-radius:999px; }
+ 
+.grid{ display:grid; gap:14px; }
+.grid-3{ grid-template-columns:repeat(3,1fr); }
+.grid-4{ grid-template-columns:repeat(4,1fr); }
+.grid-2{ grid-template-columns:repeat(2,1fr); }
+@media (max-width: 980px){ .grid-4{grid-template-columns:repeat(2,1fr);} .grid-3{grid-template-columns:repeat(2,1fr);} }
+@media (max-width: 620px){ .grid-4,.grid-3,.grid-2{grid-template-columns:1fr;} }
+ 
+.card{ background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:18px 18px; box-shadow:var(--shadow); }
+.card h3{ font-size:14px; margin:0 0 10px; color:var(--sumi); }
+ 
+.hero-stat{ padding:20px 18px; }
+.hero-stat .label{ font-size:12px; text-transform:uppercase; letter-spacing:.07em; color:var(--sumi-soft); }
+.hero-stat .value{ font-family:var(--serif); font-size:32px; margin-top:6px; color:var(--ai); }
+.hero-stat .foot{ font-size:12px; color:var(--sumi-soft); margin-top:6px; }
+ 
+.bar-track{ background:var(--washi-2); border-radius:999px; height:9px; overflow:hidden; border:1px solid var(--border); }
+.bar-fill{ height:100%; background:linear-gradient(90deg,var(--ai-soft),var(--ai)); border-radius:999px; transition:width .4s ease; }
+.bar-fill.matcha{ background:linear-gradient(90deg,#8AA97B,var(--matcha)); }
+.bar-row{ display:flex; justify-content:space-between; font-size:12px; color:var(--sumi-soft); margin-bottom:5px; }
+ 
+.stat-mini{ display:flex; flex-direction:column; gap:6px; }
+.stat-mini .num{ font-family:var(--serif); font-size:20px; }
+ 
+.btn{ border-radius:7px; border:1px solid var(--border); background:#fff; padding:8px 14px; font-size:13px; color:var(--sumi); transition:all .15s ease; }
+.btn:hover{ border-color:var(--ai); color:var(--ai); }
+.btn-primary{ background:var(--ai); color:#fff; border-color:var(--ai); }
+.btn-primary:hover{ background:var(--ai-soft); color:#fff; }
+.btn-sm{ padding:5px 10px; font-size:12px; }
+ 
+.session-block{ display:flex; align-items:flex-start; gap:14px; padding:16px; border:1px solid var(--border); border-radius:var(--radius); background:var(--card); margin-bottom:10px; }
+.session-block.done{ background:var(--matcha-soft); border-color:#BFD3AE; }
+.check-circle{ width:26px; height:26px; border-radius:50%; border:2px solid var(--border); flex-shrink:0; display:flex; align-items:center; justify-content:center; margin-top:2px; background:#fff; }
+.check-circle.checked{ background:var(--matcha); border-color:var(--matcha); color:#fff; }
+.session-block .mins{ font-size:11.5px; color:var(--sumi-soft); text-transform:uppercase; letter-spacing:.05em; }
+.session-block .title{ font-size:15px; font-weight:700; margin-top:2px; }
+.session-block .desc{ font-size:13px; color:var(--sumi-soft); margin-top:3px; }
+ 
+.hanko{ width:15px; height:15px; border-radius:3px; border:1.6px solid var(--shu); color:var(--shu); display:flex; align-items:center; justify-content:center; font-size:8px; font-family:var(--serif); transform:rotate(-6deg); }
+ 
+.cal-grid{ display:grid; grid-template-columns:repeat(7,1fr); gap:6px; }
+.cal-dow{ font-size:11px; text-align:center; color:var(--sumi-soft); text-transform:uppercase; letter-spacing:.05em; }
+.cal-cell{ aspect-ratio:1/1; border-radius:8px; border:1px solid var(--border); background:var(--card); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; font-size:12.5px; position:relative; transition:all .12s ease; }
+.cal-cell.empty{ border:none; background:transparent; }
+.cal-cell.logged{ background:var(--matcha-soft); border-color:#BFD3AE; cursor:pointer; }
+.cal-cell.missed{ background:var(--washi-2); color:var(--sumi-soft); cursor:pointer; }
+.cal-cell.future{ opacity:.4; }
+.cal-cell.today{ outline:2px solid var(--ai); outline-offset:1px; }
+.cal-cell:hover{ transform:translateY(-1px); }
+ 
+.timeline{ position:relative; padding-left:26px; }
+.timeline:before{ content:""; position:absolute; left:9px; top:6px; bottom:6px; width:2px; background:var(--border); }
+.phase-card{ position:relative; margin-bottom:18px; }
+.phase-dot{ position:absolute; left:-26px; top:22px; width:20px; height:20px; border-radius:50%; background:var(--card); border:2px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:10px; color:var(--sumi-soft); }
+.phase-dot.complete{ background:var(--matcha); border-color:var(--matcha); color:#fff; }
+.phase-dot.current{ background:var(--ai); border-color:var(--ai); color:#fff; }
+.phase-head{ display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:8px; }
+.phase-head .eyebrow{ font-size:11px; text-transform:uppercase; letter-spacing:.07em; color:var(--ai); }
+.phase-head h3{ font-family:var(--serif); font-size:18px; margin:2px 0 3px; }
+.phase-goal{ font-size:13px; color:var(--sumi-soft); }
+.chip{ display:inline-block; font-size:11.5px; padding:4px 9px; border-radius:999px; margin:3px 5px 0 0; background:var(--washi-2); border:1px solid var(--border); color:var(--sumi-soft); }
+.chip.on{ background:var(--matcha-soft); border-color:#BFD3AE; color:var(--matcha); }
+.chip.now{ background:var(--ai); border-color:var(--ai); color:#fff; }
+ 
+table{ width:100%; border-collapse:collapse; font-size:13.5px; }
+th{ text-align:left; font-size:11.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--sumi-soft); padding:8px 8px; border-bottom:1px solid var(--border); }
+td{ padding:9px 8px; border-bottom:1px solid var(--washi-2); vertical-align:top; }
+.kanji-char{ font-family:var(--serif); font-size:22px; }
+.status-select{ border:1px solid var(--border); border-radius:6px; padding:4px 6px; font-size:12px; background:#fff; }
+ 
+.skill-row{ display:flex; justify-content:space-between; align-items:center; padding:10px 4px; border-bottom:1px solid var(--washi-2); gap:10px; }
+.skill-row:last-child{ border-bottom:none; }
+.skill-name{ font-size:13.5px; }
+.status-tag{ font-size:11.5px; padding:4px 10px; border-radius:999px; border:1px solid var(--border); }
+.status-tag.confident{ background:var(--matcha); color:#fff; border-color:var(--matcha); }
+.status-tag.can_do{ background:var(--matcha-soft); color:var(--matcha); border-color:#BFD3AE; }
+.status-tag.learning{ background:#F1E6C8; color:#8A6A20; border-color:#E4D19E; }
+.status-tag.not_started{ background:var(--washi-2); color:var(--sumi-soft); }
+ 
+.ach-card{ text-align:center; padding:18px 10px; opacity:1; }
+.ach-card.locked{ opacity:.42; }
+.ach-icon{ font-size:26px; margin-bottom:8px; }
+.ach-title{ font-size:12.5px; font-weight:700; }
+.ach-date{ font-size:11px; color:var(--sumi-soft); margin-top:4px; }
+ 
+label.field{ display:block; font-size:12px; color:var(--sumi-soft); margin-bottom:4px; margin-top:12px; }
+input[type=text], input[type=number], input[type=date], textarea, select.full{
+  width:100%; padding:8px 10px; border:1px solid var(--border); border-radius:7px; font-size:13.5px; background:#fff;
+}
+textarea{ resize:vertical; min-height:56px; }
+.conf-row{ display:flex; gap:8px; margin-top:6px; }
+.conf-dot{ width:34px; height:34px; border-radius:50%; border:1px solid var(--border); background:#fff; display:flex; align-items:center; justify-content:center; font-size:13px; color:var(--sumi-soft); }
+.conf-dot.sel{ background:var(--ai); border-color:var(--ai); color:#fff; }
+ 
+.banner{ background:var(--matcha-soft); border:1px solid #BFD3AE; color:var(--matcha); border-radius:var(--radius); padding:14px 18px; margin-bottom:16px; font-size:13.5px; display:flex; align-items:center; gap:10px; }
+.banner.gentle{ background:var(--washi-2); border-color:var(--border); color:var(--sumi-soft); }
+.banner.alert{ background:#F3E1DD; border-color:#E3B7AC; color:var(--shu); }
+ 
+.section-title{ font-size:16px; margin:26px 0 10px; font-family:var(--serif); }
+.muted{ color:var(--sumi-soft); font-size:12.5px; }
+ 
+.kana-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(46px,1fr)); gap:8px; }
+.kana-btn{ aspect-ratio:1/1; border-radius:8px; border:1px solid var(--border); font-family:var(--serif); font-size:18px; }
+ 
+.mobile-nav{ display:none; }
+@media (max-width: 860px){
+  .sidebar{ display:none; }
+  .mobile-nav{ display:flex; position:fixed; bottom:0; left:0; right:0; background:var(--card); border-top:1px solid var(--border); padding:6px 4px; z-index:20; overflow-x:auto; gap:2px; }
+  .mobile-nav .navbtn{ flex-direction:column; font-size:10px; gap:3px; padding:8px 6px; min-width:64px; }
+  .mobile-nav .navbtn .jp{ font-size:15px; }
+  .main{ padding:20px 16px 90px; }
+}
+ 
+.modal-back{ position:fixed; inset:0; background:rgba(35,35,35,0.4); display:flex; align-items:center; justify-content:center; z-index:50; padding:16px; }
+.modal{ background:var(--card); border-radius:var(--radius); padding:22px; max-width:440px; width:100%; max-height:85vh; overflow:auto; box-shadow:0 20px 60px rgba(0,0,0,0.25); }
+.modal h3{ margin-top:0; }
+.close-x{ float:right; background:none; border:none; font-size:18px; color:var(--sumi-soft); }
+</style>
+</head>
+<body>
+<div id="root"></div>
+ 
+<script type="text/babel">
+const { useState, useEffect, useMemo } = React;
+ 
+/* =========================================================================
+   CONSTANTS
+   ========================================================================= */
+const STORAGE_KEY = "nihongo-tracker-state-v2";
+ 
+const HIRAGANA_CHARS = "あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをん".split("");
+const KATAKANA_CHARS = "アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン".split("");
+ 
+const ROADMAP_DEF = [
+  { id:1, title:"Hiragana", days:"Days 1–30", goal:"Read basic Japanese without relying on Romaji.",
+    topics:["Basic Hiragana","Dakuten","Handakuten","Combination sounds","Small っ","Small ゃゅょ","Long sounds","Reading simple words","Hiragana review"] },
+  { id:2, title:"Katakana", days:"Days 31–60", goal:"Read common Katakana words.",
+    topics:["Basic Katakana","Dakuten","Handakuten","Combination sounds","Long vowels","Foreign words","Katakana reading practice","Katakana review"] },
+  { id:3, title:"Basic Communication", days:"Days 61–150", goal:"Handle basic everyday communication.",
+    topics:["Greetings","Self introduction","Name","Country","Family","Friends","Numbers","Time","Dates","Morning/Afternoon/Evening/Night","Food","Restaurants","Shopping","Directions","Transportation","Daily routine","Hobbies","Likes/dislikes","Review & conversation"] },
+  { id:4, title:"Grammar Foundation", days:"Days 151–300", goal:"Create my own Japanese sentences.",
+    topics:["は / が / を","に / で / と / の / も","から / まで","です / ます","Negative form","Past tense","Adjectives","Questions","Counters","あります / います","て-form","Requests & permission","Prohibition & ability","Comparisons","Reasons & connecting sentences"] },
+  { id:5, title:"Early Kanji", days:"Days 61–150 (parallel)", goal:"Recognise 50–100 kanji gradually, alongside basic communication.",
+    topics:["Numbers & counters kanji","Days & time kanji","Body & family kanji","Nature kanji","Basic verbs kanji"] },
+  { id:6, title:"Kanji Foundation", days:"Days 151–300", goal:"Reach 200–300 total kanji.",
+    topics:["Common everyday kanji","School & work kanji","Location & direction kanji","Compound readings"] },
+  { id:7, title:"Intermediate Japanese", days:"Days 301–600", goal:"Discuss opinions, experiences, plans and stories. Reach 500–800 kanji.",
+    topics:["Casual speech","Formal speech","Opinions & experiences","Plans & stories","Work & travel topics","Simple articles"] },
+  { id:8, title:"Advanced Development", days:"Days 600–900+", goal:"Handle longer native conversation, media and complex expression.",
+    topics:["Longer conversations","Native listening","Extended reading","Advanced grammar","Keigo (honorifics)","Japanese media","Writing practice"] },
+];
+ 
+const SKILLS_DEF = [
+  "Introduce myself","Say where I'm from","Say my occupation / student status","Say hello",
+  "Say good morning","Say good afternoon","Say good evening","Say good night","Thank someone",
+  "Apologize","Ask someone's name","Ask where someone is from","Tell the time",
+  "Talk about my daily routine","Order food","Buy something","Ask the price","Ask for directions",
+  "Talk about hobbies","Say what I like","Say what I dislike","Talk about yesterday",
+  "Talk about today","Talk about tomorrow / future plans",
+];
+ 
+const ACHIEVEMENT_DEF = [
+  { id:"first_lesson", title:"First Japanese Lesson", icon:"㊀", test: d => d.stats.totalLessons >= 1 },
+  { id:"ten_hours", title:"10 Hours Learned", icon:"⏳", test: d => d.stats.totalMinutes >= 600 },
+  { id:"hiragana_complete", title:"Hiragana Complete", icon:"あ", test: d => d.hiragana.mastered >= d.hiragana.total },
+  { id:"katakana_complete", title:"Katakana Complete", icon:"ア", test: d => d.katakana.mastered >= d.katakana.total },
+  { id:"kanji_50", title:"First 50 Kanji", icon:"㊆", test: d => d.kanjiList.length >= 50 },
+  { id:"kanji_100", title:"First 100 Kanji", icon:"百", test: d => d.kanjiList.length >= 100 },
+  { id:"first_conversation", title:"First Japanese Conversation", icon:"会", test: d => Object.values(d.skills).filter(v=>v==="confident"||v==="can_do").length >= 5 },
+  { id:"vocab_100", title:"100 Vocabulary Words", icon:"語", test: d => d.vocabulary.total >= 100 },
+  { id:"first_sentence", title:"First Japanese Sentence", icon:"文", test: d => d.grammar.learned >= 1 },
+  { id:"listening_30", title:"30 Listening Sessions", icon:"耳", test: d => d.listening.sessions >= 30 },
+  { id:"speaking_30", title:"30 Speaking Sessions", icon:"話", test: d => d.speaking.sessions >= 30 },
+];
+ 
+/* =========================================================================
+   BLANK STATE — everything starts genuinely empty.
+   calendarLog is the single source of truth for day-to-day numbers: nothing
+   else is hand-incremented, so dashboard/review/achievement numbers can
+   never drift out of sync with what you actually logged.
+   ========================================================================= */
+function seedState(){
+  return {
+    profile:{ level:"Beginner — just starting out" },
+    hiraganaStatus:{},
+    katakanaStatus:{},
+    kanjiList: [],
+    skills: Object.fromEntries(SKILLS_DEF.map(s => [s, "not_started"])),
+    roadmapProgress: Object.fromEntries(ROADMAP_DEF.map(p => [p.id, { completedTopics:[], manuallyComplete:false, estCompletion:"" }])),
+    calendarLog: {},
+    achievementsUnlockedAt: {},
+  };
+}
+ 
+// Defensive merge so older saved data (previous versions of this app) never crashes the new version.
+function loadState(){
+  const base = seedState();
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw){
+      const parsed = JSON.parse(raw);
+      return {
+        ...base,
+        ...parsed,
+        hiraganaStatus: parsed.hiraganaStatus || base.hiraganaStatus,
+        katakanaStatus: parsed.katakanaStatus || base.katakanaStatus,
+        kanjiList: parsed.kanjiList || [],
+        skills: parsed.skills || base.skills,
+        roadmapProgress: parsed.roadmapProgress || base.roadmapProgress,
+        calendarLog: parsed.calendarLog || {},
+        achievementsUnlockedAt: parsed.achievementsUnlockedAt || {},
+      };
+    }
+  }catch(e){ console.warn("Could not read saved progress, starting fresh.", e); }
+  return base;
+}
+ 
+/* =========================================================================
+   HELPERS
+   ========================================================================= */
+function pct(a,b){ if(!b) return 0; return Math.round((a/b)*100); }
+function todayKey(){ return new Date().toISOString().slice(0,10); }
+function fmtHours(mins){ const h = Math.floor(mins/60), m = mins%60; return h>0 ? `${h}h ${m}m` : `${m}m`; }
+ 
+function kanaStats(statusMap, chars){
+  const total = chars.length;
+  const mastered = chars.filter(c => statusMap[c] === "mastered").length;
+  const learning = chars.filter(c => statusMap[c] === "learning").length;
+  return { total, mastered, learning, learned: mastered + learning };
+}
+ 
+// Every number below is recomputed fresh from calendarLog on every render —
+// that's what makes backdated / edited entries show up correctly everywhere.
+function computeAggregates(raw){
+  const entries = Object.entries(raw.calendarLog);
+  const totalDays = entries.length;
+  const totalMinutes = entries.reduce((a,[,e])=>a+(e.minutes||0),0);
+  const listeningSessions = entries.filter(([,e])=>e.listening).length;
+  const speakingSessions = entries.filter(([,e])=>e.speaking).length;
+ 
+  const vocabSet = new Set(), vocabWeekSet = new Set(), grammarSet = new Set();
+  const weekCutoff = new Date(); weekCutoff.setDate(weekCutoff.getDate()-7);
+  entries.forEach(([date,e])=>{
+    (e.vocab||"").split(",").map(x=>x.trim()).filter(Boolean).forEach(w=>{
+      vocabSet.add(w.toLowerCase());
+      if(new Date(date) >= weekCutoff) vocabWeekSet.add(w.toLowerCase());
+    });
+    (e.grammar||"").split(",").map(x=>x.trim()).filter(Boolean).forEach(g => grammarSet.add(g.toLowerCase()));
+  });
+ 
+  return {
+    stats:{ totalDays, totalMinutes, totalLessons: totalDays },
+    vocabulary:{ total:vocabSet.size, newThisWeek:vocabWeekSet.size },
+    grammar:{ learned:grammarSet.size },
+    // each combined listening+speaking block is ~5 minutes; this is an estimate, not a stopwatch.
+    listening:{ sessions:listeningSessions, minutes:listeningSessions*5 },
+    speaking:{ sessions:speakingSessions, minutes:speakingSessions*5 },
+  };
+}
+ 
+function withDerived(raw){
+  return {
+    ...raw,
+    ...computeAggregates(raw),
+    hiragana: kanaStats(raw.hiraganaStatus, HIRAGANA_CHARS),
+    katakana: kanaStats(raw.katakanaStatus, KATAKANA_CHARS),
+  };
+}
+ 
+function overallProgress(d){
+  const parts = [
+    pct(d.hiragana.mastered, d.hiragana.total),
+    pct(d.katakana.mastered, d.katakana.total),
+    Math.min(100, pct(d.kanjiList.length, 300)),
+    Math.min(100, pct(d.vocabulary.total, 500)),
+    Math.min(100, pct(d.grammar.learned, 27)),
+  ];
+  return Math.round(parts.reduce((a,b)=>a+b,0)/parts.length);
+}
+ 
+/* =========================================================================
+   SHARED UI PIECES
+   ========================================================================= */
+function ProgressBar({label, value, max, tone}){
+  const p = pct(value, max);
+  return (
+    <div>
+      <div className="bar-row"><span>{label}</span><span>{value}/{max} · {p}%</span></div>
+      <div className="bar-track"><div className={"bar-fill " + (tone||"")} style={{width:p+"%"}}></div></div>
+    </div>
+  );
+}
+function StatCard({label, value, foot}){
+  return (
+    <div className="card hero-stat">
+      <div className="label">{label}</div>
+      <div className="value">{value}</div>
+      {foot && <div className="foot">{foot}</div>}
+    </div>
+  );
+}
+ 
+/* =========================================================================
+   PAGE: DASHBOARD  (receives DERIVED state — read-only)
+   ========================================================================= */
+function Dashboard({derived}){
+  const op = overallProgress(derived);
+  return (
+    <div>
+      <div className="banner">
+        🌱 &nbsp;No streak counters here — missed days never erase your progress. Pick up wherever you left off.
+      </div>
+      <div className="grid grid-3" style={{marginBottom:16}}>
+        <StatCard label="Learning Days" value={derived.stats.totalDays} foot="Days you actually logged, not consecutive days" />
+        <StatCard label="Total Time Invested" value={fmtHours(derived.stats.totalMinutes)} foot={derived.stats.totalLessons + " lessons completed"} />
+        <StatCard label="Overall Japanese Progress" value={op+"%"} foot={derived.profile.level} />
+      </div>
+      <div className="grid grid-4">
+        <div className="card"><h3>Hiragana</h3><ProgressBar label="Mastered" value={derived.hiragana.mastered} max={derived.hiragana.total} tone="matcha" /></div>
+        <div className="card"><h3>Katakana</h3><ProgressBar label="Mastered" value={derived.katakana.mastered} max={derived.katakana.total} tone="matcha" /></div>
+        <div className="card stat-mini"><h3>Kanji Learned</h3><div className="num">{derived.kanjiList.length}</div><div className="muted">toward 300 (foundation goal)</div></div>
+        <div className="card stat-mini"><h3>Vocabulary</h3><div className="num">{derived.vocabulary.total}</div><div className="muted">{derived.vocabulary.newThisWeek} new this week</div></div>
+        <div className="card stat-mini"><h3>Grammar Concepts</h3><div className="num">{derived.grammar.learned}</div><div className="muted">unique concepts logged</div></div>
+        <div className="card stat-mini"><h3>Listening Sessions</h3><div className="num">{derived.listening.sessions}</div><div className="muted">~{fmtHours(derived.listening.minutes)} total</div></div>
+        <div className="card stat-mini"><h3>Speaking Sessions</h3><div className="num">{derived.speaking.sessions}</div><div className="muted">~{fmtHours(derived.speaking.minutes)} total</div></div>
+        <div className="card stat-mini"><h3>Current Level</h3><div className="num" style={{fontSize:16}}>{derived.profile.level}</div><div className="muted">Phase-based, not day-based</div></div>
+      </div>
+    </div>
+  );
+}
+ 
+/* =========================================================================
+   PAGE: TODAY / DAILY LOG — now date-selectable, so you can log any day,
+   including yesterday or earlier, and edit an existing entry.
+   ========================================================================= */
+function emptyForm(entry){
+  const notes = entry ? entry.notes || "" : "";
+  const splitIdx = notes.indexOf("Found difficult:");
+  return {
+    review: entry ? !!entry.review : false,
+    newLesson: entry ? !!entry.newLesson : false,
+    listeningSpeaking: entry ? !!entry.listening : false,
+    activeRecall: entry ? !!entry.activeRecall : false,
+    minutes: entry ? String(entry.minutes) : "20",
+    learned: splitIdx >= 0 ? notes.slice(0, splitIdx).replace(/\n$/,"") : notes,
+    difficult: splitIdx >= 0 ? notes.slice(splitIdx + "Found difficult:".length).trim() : "",
+    vocab: entry ? entry.vocab || "" : "",
+    grammar: entry ? entry.grammar || "" : "",
+    kanji: entry ? entry.kanji || "" : "",
+    confidence: entry ? entry.confidence : 3,
+  };
+}
+ 
+function TodaySession({state, setState}){
+  const [selectedDate, setSelectedDate] = useState(todayKey());
+  const existing = state.calendarLog[selectedDate];
+  const [form, setForm] = useState(() => emptyForm(existing));
+ 
+  useEffect(() => {
+    setForm(emptyForm(state.calendarLog[selectedDate]));
+    // eslint-disable-next-line
+  }, [selectedDate]);
+ 
+  function toggle(field){ setForm(f => ({...f, [field]: !f[field]})); }
+  const allChecked = form.review && form.newLesson && form.listeningSpeaking && form.activeRecall;
+ 
+  function saveLog(){
+    setState(s => {
+      const entry = {
+        minutes: Number(form.minutes) || 0,
+        review: form.review, newLesson: form.newLesson,
+        listening: form.listeningSpeaking, speaking: form.listeningSpeaking,
+        activeRecall: form.activeRecall,
+        vocab: form.vocab, grammar: form.grammar, kanji: form.kanji,
+        notes: form.learned + (form.difficult ? ("\nFound difficult: " + form.difficult) : ""),
+        confidence: form.confidence,
+      };
+      // Any new kanji character typed here that isn't in your Kanji tracker yet
+      // gets a lightweight entry there automatically, so nothing you log is lost.
+      const typedChars = (form.kanji || "").split(",").map(x=>x.trim()).filter(Boolean);
+      const known = new Set(s.kanjiList.map(k=>k.char));
+      const additions = typedChars.filter(c=>!known.has(c)).map(c => ({
+        char:c, meaning:"", on:"", kun:"", examples:"", date:selectedDate,
+        recognition:"learning", writing:"not_started", review:"due",
+      }));
+      return {
+        ...s,
+        calendarLog: {...s.calendarLog, [selectedDate]: entry},
+        kanjiList: [...s.kanjiList, ...additions],
+      };
+    });
+  }
+ 
+  const blocks = [
+    { key:"review", mins:"5 minutes", title:"Review", desc:"Revisit earlier vocabulary, kanji or grammar with quick recall." },
+    { key:"newLesson", mins:"7 minutes", title:"New Lesson", desc:"Learn one new chunk: a topic, grammar point, or a handful of kanji." },
+    { key:"listeningSpeaking", mins:"5 minutes", title:"Listening + Speaking", desc:"Shadow a short clip or read a line aloud. Sound matters more than perfection." },
+    { key:"activeRecall", mins:"3 minutes", title:"Active Recall", desc:"Test yourself without looking — write, say, or picture the answer first." },
+  ];
+ 
+  return (
+    <div>
+      <label className="field" style={{marginTop:0}}>Which day are you logging?</label>
+      <input type="date" value={selectedDate} max={todayKey()} onChange={e=>setSelectedDate(e.target.value)} />
+ 
+      {selectedDate !== todayKey() && (
+        <div className="banner gentle" style={{marginTop:12}}>
+          Logging for {selectedDate} — this updates that day on your Calendar and every total on your Dashboard, exactly as if you'd logged it then.
+        </div>
+      )}
+      {existing && (
+        <div className="banner alert" style={{marginTop:12}}>
+          You already have an entry for this day. Saving again will overwrite it with what's below.
+        </div>
+      )}
+ 
+      <div style={{marginTop:16}}>
+        {blocks.map(b => (
+          <div key={b.key} className={"session-block " + (form[b.key] ? "done":"")} onClick={()=>toggle(b.key)}>
+            <div className={"check-circle " + (form[b.key] ? "checked":"")}>{form[b.key] ? "✓" : ""}</div>
+            <div>
+              <div className="mins">{b.mins}</div>
+              <div className="title">{b.title}</div>
+              <div className="desc">{b.desc}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+ 
+      {allChecked && <div className="banner">今日の学習完了 — all four sections done for this day.</div>}
+ 
+      <div className="card">
+        <h3 className="serif" style={{fontSize:17}}>Session notes</h3>
+        <p className="muted" style={{marginTop:-4}}>You can fill this in and save even if you only did part of the session — a partial log is still real progress.</p>
+        <div className="grid grid-2">
+          <div>
+            <label className="field">Minutes studied</label>
+            <input type="number" value={form.minutes} onChange={e=>setForm({...form, minutes:e.target.value})} />
+            <label className="field">What I learned</label>
+            <textarea value={form.learned} onChange={e=>setForm({...form, learned:e.target.value})} placeholder="e.g. Practiced ordering food with ください" />
+            <label className="field">New vocabulary (comma-separated)</label>
+            <input type="text" value={form.vocab} onChange={e=>setForm({...form, vocab:e.target.value})} placeholder="例: 天気, 図書館" />
+          </div>
+          <div>
+            <label className="field">New grammar (comma-separated)</label>
+            <input type="text" value={form.grammar} onChange={e=>setForm({...form, grammar:e.target.value})} placeholder="例: て-form" />
+            <label className="field">New kanji (comma-separated)</label>
+            <input type="text" value={form.kanji} onChange={e=>setForm({...form, kanji:e.target.value})} placeholder="例: 行" />
+            <label className="field">What I found difficult</label>
+            <textarea value={form.difficult} onChange={e=>setForm({...form, difficult:e.target.value})} placeholder="Be honest — this helps you review smarter" />
+          </div>
+        </div>
+        <label className="field">Confidence level</label>
+        <div className="conf-row">
+          {[1,2,3,4,5].map(n => (
+            <button key={n} className={"conf-dot " + (form.confidence===n ? "sel":"")} onClick={()=>setForm({...form, confidence:n})}>{n}</button>
+          ))}
+        </div>
+        <button className="btn btn-primary" style={{marginTop:16}} onClick={saveLog}>
+          {existing ? "Update log for " : "Save log for "}{selectedDate}
+        </button>
+      </div>
+    </div>
+  );
+}
+ 
+/* =========================================================================
+   PAGE: KANA (Hiragana / Katakana tracker — this didn't exist before,
+   which was part of why hiragana/katakana progress never moved)
+   ========================================================================= */
+function KanaGrid({title, chars, statusMap, onCycle}){
+  return (
+    <div className="card" style={{marginBottom:16}}>
+      <h3>{title}</h3>
+      <div className="kana-grid">
+        {chars.map(c => {
+          const st = statusMap[c] || "not_started";
+          const bg = st==="mastered" ? "var(--matcha)" : st==="learning" ? "#F1E6C8" : "#fff";
+          const color = st==="mastered" ? "#fff" : "var(--sumi)";
+          return (
+            <button key={c} className="kana-btn" title={st.replace("_"," ")} style={{background:bg,color:color}} onClick={()=>onCycle(c)}>
+              {c}
+            </button>
+          );
+        })}
+      </div>
+      <p className="muted" style={{marginTop:10}}>Tap a character to cycle: not started → learning → mastered.</p>
+    </div>
+  );
+}
+function KanaPage({state, setState}){
+  function cycle(setKey, char){
+    setState(s => {
+      const map = {...s[setKey]};
+      const order = ["not_started","learning","mastered"];
+      const cur = map[char] || "not_started";
+      map[char] = order[(order.indexOf(cur)+1) % order.length];
+      return {...s, [setKey]: map};
+    });
+  }
+  return (
+    <div>
+      <KanaGrid title="Hiragana (46)" chars={HIRAGANA_CHARS} statusMap={state.hiraganaStatus} onCycle={c=>cycle("hiraganaStatus", c)} />
+      <KanaGrid title="Katakana (46)" chars={KATAKANA_CHARS} statusMap={state.katakanaStatus} onCycle={c=>cycle("katakanaStatus", c)} />
+    </div>
+  );
+}
+ 
+/* =========================================================================
+   PAGE: ROADMAP
+   ========================================================================= */
+function Roadmap({state, setState}){
+  function toggleTopic(phaseId, topic){
+    setState(s=>{
+      const rp = s.roadmapProgress[phaseId];
+      const has = rp.completedTopics.includes(topic);
+      const completedTopics = has ? rp.completedTopics.filter(t=>t!==topic) : [...rp.completedTopics, topic];
+      return {...s, roadmapProgress:{...s.roadmapProgress, [phaseId]:{...rp, completedTopics}}};
+    });
+  }
+  function markComplete(phaseId){
+    setState(s=>({...s, roadmapProgress:{...s.roadmapProgress, [phaseId]:{...s.roadmapProgress[phaseId], manuallyComplete:!s.roadmapProgress[phaseId].manuallyComplete}}}));
+  }
+  function setEstDate(phaseId, val){
+    setState(s=>({...s, roadmapProgress:{...s.roadmapProgress, [phaseId]:{...s.roadmapProgress[phaseId], estCompletion:val}}}));
+  }
+  const firstIncomplete = ROADMAP_DEF.find(p => !state.roadmapProgress[p.id].manuallyComplete);
+ 
+  return (
+    <div className="timeline">
+      <div className="muted" style={{marginBottom:14}}>
+        Progress here is based on the objectives you check off — never on the calendar. Take as long as you need on any phase.
+      </div>
+      {ROADMAP_DEF.map(phase => {
+        const rp = state.roadmapProgress[phase.id];
+        const done = rp.completedTopics.length;
+        const isComplete = rp.manuallyComplete;
+        const isCurrent = !isComplete && firstIncomplete && firstIncomplete.id === phase.id;
+        const nextTopic = phase.topics.find(t=>!rp.completedTopics.includes(t));
+        return (
+          <div className="phase-card" key={phase.id}>
+            <div className={"phase-dot " + (isComplete?"complete":isCurrent?"current":"")}>{isComplete?"✓":phase.id}</div>
+            <div className="card">
+              <div className="phase-head">
+                <div>
+                  <div className="eyebrow">Phase {phase.id} · {phase.days}</div>
+                  <h3>{phase.title}</h3>
+                  <div className="phase-goal">{phase.goal}</div>
+                </div>
+                <button className={"btn btn-sm " + (isComplete ? "btn-primary":"")} onClick={()=>markComplete(phase.id)}>
+                  {isComplete ? "Marked complete ✓" : "Mark phase complete"}
+                </button>
+              </div>
+              <div style={{margin:"14px 0"}}>
+                <ProgressBar label="Objectives completed" value={done} max={phase.topics.length} tone={isComplete?"matcha":""} />
+              </div>
+              <div>
+                {phase.topics.map(t => {
+                  const on = rp.completedTopics.includes(t);
+                  return <span key={t} className={"chip " + (on?"on":(t===nextTopic?"now":""))} onClick={()=>toggleTopic(phase.id,t)} style={{cursor:"pointer"}}>{on?"✓ ":""}{t}</span>;
+                })}
+              </div>
+              <div className="grid grid-2" style={{marginTop:14}}>
+                <div className="muted">Current topic: <b style={{color:"var(--sumi)"}}>{nextTopic || "All topics covered"}</b></div>
+                <div>
+                  <label className="field" style={{marginTop:0}}>Estimated completion date</label>
+                  <input type="date" value={rp.estCompletion} onChange={e=>setEstDate(phase.id, e.target.value)} />
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+ 
+/* =========================================================================
+   PAGE: CALENDAR
+   ========================================================================= */
+function Calendar({state}){
+  const [monthOffset, setMonthOffset] = useState(0);
+  const [selected, setSelected] = useState(null);
+ 
+  const base = new Date();
+  base.setDate(1);
+  base.setMonth(base.getMonth()+monthOffset);
+  const year = base.getFullYear(), month = base.getMonth();
+  const firstDow = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month+1, 0).getDate();
+  const monthLabel = base.toLocaleString(undefined, {month:"long", year:"numeric"});
+ 
+  const cells = [];
+  for(let i=0;i<firstDow;i++) cells.push(null);
+  for(let d=1; d<=daysInMonth; d++) cells.push(d);
+  const tKey = todayKey();
+ 
+  return (
+    <div>
+      <div className="card">
+        <div style={{display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14}}>
+          <button className="btn btn-sm" onClick={()=>setMonthOffset(m=>m-1)}>← Prev</button>
+          <h3 className="serif" style={{fontSize:16, margin:0}}>{monthLabel}</h3>
+          <button className="btn btn-sm" onClick={()=>setMonthOffset(m=>m+1)}>Next →</button>
+        </div>
+        <div className="cal-grid" style={{marginBottom:6}}>
+          {["Su","Mo","Tu","We","Th","Fr","Sa"].map(d=><div key={d} className="cal-dow">{d}</div>)}
+        </div>
+        <div className="cal-grid">
+          {cells.map((d,i)=>{
+            if(d===null) return <div key={i} className="cal-cell empty"></div>;
+            const dateObj = new Date(year, month, d);
+            const key = dateObj.toISOString().slice(0,10);
+            const isFuture = key > tKey;
+            const entry = state.calendarLog[key];
+            const cls = isFuture ? "future" : entry ? "logged" : "missed";
+            return (
+              <div key={i} className={"cal-cell " + cls + (key===tKey ? " today":"")} onClick={()=> !isFuture && setSelected(key)}>
+                <span>{d}</span>
+                {entry && <span className="hanko">学</span>}
+              </div>
+            );
+          })}
+        </div>
+        <div style={{display:"flex", gap:16, marginTop:14, fontSize:12}} className="muted">
+          <span><span className="hanko" style={{display:"inline-flex", verticalAlign:"middle"}}>学</span> &nbsp;Logged day</span>
+          <span>▢ Missed day — no penalty, just a gap</span>
+        </div>
+      </div>
+ 
+      {selected && (
+        <div className="modal-back" onClick={()=>setSelected(null)}>
+          <div className="modal" onClick={e=>e.stopPropagation()}>
+            <button className="close-x" onClick={()=>setSelected(null)}>✕</button>
+            <h3>{selected}</h3>
+            {state.calendarLog[selected] ? (
+              <div>
+                <p><b>Time spent:</b> {state.calendarLog[selected].minutes} minutes</p>
+                <p><b>Lessons:</b> Review {state.calendarLog[selected].review?"✓":"—"} · New lesson {state.calendarLog[selected].newLesson?"✓":"—"} · Listening/Speaking {state.calendarLog[selected].listening?"✓":"—"} · Active recall {state.calendarLog[selected].activeRecall?"✓":"—"}</p>
+                {state.calendarLog[selected].vocab && <p><b>Vocabulary:</b> {state.calendarLog[selected].vocab}</p>}
+                {state.calendarLog[selected].grammar && <p><b>Grammar:</b> {state.calendarLog[selected].grammar}</p>}
+                {state.calendarLog[selected].kanji && <p><b>Kanji:</b> {state.calendarLog[selected].kanji}</p>}
+                {state.calendarLog[selected].notes && <p><b>Notes:</b> {state.calendarLog[selected].notes}</p>}
+                <p><b>Confidence:</b> {state.calendarLog[selected].confidence} / 5</p>
+                <p className="muted">Go to Today's Session and pick this date to edit this entry.</p>
+              </div>
+            ) : (
+              <div>
+                <p className="muted">No entry for this day.</p>
+                <div className="banner gentle" style={{marginTop:10}}>You can continue today, or go to Today's Session and pick this date to log it retroactively.</div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+ 
+/* =========================================================================
+   PAGE: KANJI
+   ========================================================================= */
+function KanjiPage({state, setState}){
+  const [form, setForm] = useState({char:"", meaning:"", on:"", kun:"", examples:""});
+  function addKanji(){
+    if(!form.char.trim()) return;
+    setState(s=>({...s, kanjiList:[...s.kanjiList, {...form, date:todayKey(), recognition:"learning", writing:"not_started", review:"due"}]}));
+    setForm({char:"", meaning:"", on:"", kun:"", examples:""});
+  }
+  function updateField(idx, field, val){
+    setState(s=>{
+      const list = [...s.kanjiList];
+      list[idx] = {...list[idx], [field]:val};
+      return {...s, kanjiList:list};
+    });
+  }
+  return (
+    <div>
+      <div className="grid grid-4" style={{marginBottom:16}}>
+        <StatCard label="Total Learned" value={state.kanjiList.length} />
+        <StatCard label="Recognition mastered" value={state.kanjiList.filter(k=>k.recognition==="mastered").length} />
+        <StatCard label="Can write" value={state.kanjiList.filter(k=>k.writing==="can_write").length} />
+        <StatCard label="Review due" value={state.kanjiList.filter(k=>k.review==="due").length} />
+      </div>
+      <div className="card" style={{overflowX:"auto"}}>
+        <h3>Kanji Log</h3>
+        {state.kanjiList.length===0 && <p className="muted">No kanji logged yet. Add one below, or type new kanji into a daily log entry and it will appear here automatically.</p>}
+        {state.kanjiList.length>0 && (
+        <table>
+          <thead><tr><th>字</th><th>Meaning</th><th>On / Kun</th><th>Examples</th><th>Learned</th><th>Recognition</th><th>Writing</th><th>Review</th></tr></thead>
+          <tbody>
+            {state.kanjiList.map((k,idx)=>(
+              <tr key={idx}>
+                <td className="kanji-char">{k.char}</td>
+                <td><input type="text" style={{border:"none",background:"transparent",padding:0}} value={k.meaning} onChange={e=>updateField(idx,"meaning",e.target.value)} placeholder="meaning" /></td>
+                <td><input type="text" style={{border:"none",background:"transparent",padding:0,marginBottom:4}} value={k.on} onChange={e=>updateField(idx,"on",e.target.value)} placeholder="on-yomi" />
+                    <br/><input type="text" style={{border:"none",background:"transparent",padding:0}} value={k.kun} onChange={e=>updateField(idx,"kun",e.target.value)} placeholder="kun-yomi" /></td>
+                <td style={{maxWidth:180}}><input type="text" style={{border:"none",background:"transparent",padding:0}} value={k.examples} onChange={e=>updateField(idx,"examples",e.target.value)} placeholder="examples" /></td>
+                <td>{k.date}</td>
+                <td>
+                  <select className="status-select" value={k.recognition} onChange={e=>updateField(idx,"recognition",e.target.value)}>
+                    <option value="not_started">Not started</option><option value="learning">Learning</option><option value="mastered">Mastered</option>
+                  </select>
+                </td>
+                <td>
+                  <select className="status-select" value={k.writing} onChange={e=>updateField(idx,"writing",e.target.value)}>
+                    <option value="not_started">Not started</option><option value="learning">Learning</option><option value="can_write">Can write</option>
+                  </select>
+                </td>
+                <td>
+                  <select className="status-select" value={k.review} onChange={e=>updateField(idx,"review",e.target.value)}>
+                    <option value="due">Due</option><option value="not_due">Not due</option>
+                  </select>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        )}
+      </div>
+      <div className="card" style={{marginTop:16}}>
+        <h3>Add a kanji</h3>
+        <div className="grid grid-4">
+          <div><label className="field" style={{marginTop:0}}>Character</label><input type="text" value={form.char} onChange={e=>setForm({...form,char:e.target.value})} /></div>
+          <div><label className="field" style={{marginTop:0}}>Meaning</label><input type="text" value={form.meaning} onChange={e=>setForm({...form,meaning:e.target.value})} /></div>
+          <div><label className="field" style={{marginTop:0}}>On-yomi</label><input type="text" value={form.on} onChange={e=>setForm({...form,on:e.target.value})} /></div>
+          <div><label className="field" style={{marginTop:0}}>Kun-yomi</label><input type="text" value={form.kun} onChange={e=>setForm({...form,kun:e.target.value})} /></div>
+        </div>
+        <label className="field">Example words</label>
+        <input type="text" value={form.examples} onChange={e=>setForm({...form,examples:e.target.value})} />
+        <button className="btn btn-primary" style={{marginTop:14}} onClick={addKanji}>Add kanji</button>
+      </div>
+    </div>
+  );
+}
+ 
+/* =========================================================================
+   PAGE: COMMUNICATION SKILLS
+   ========================================================================= */
+function CommunicationSkills({state, setState}){
+  function setStatus(skill, val){ setState(s=>({...s, skills:{...s.skills, [skill]:val}})); }
+  const labelMap = {confident:"Confident", can_do:"Can Do", learning:"Learning", not_started:"Not Started"};
+  return (
+    <div className="card">
+      <h3 style={{fontSize:17}} className="serif">Things I Can Actually Say</h3>
+      <p className="muted">This is the real measure of progress — not days in a row.</p>
+      {SKILLS_DEF.map(skill => (
+        <div className="skill-row" key={skill}>
+          <div className="skill-name">{skill}</div>
+          <div style={{display:"flex", gap:6, alignItems:"center"}}>
+            <span className={"status-tag " + state.skills[skill]}>{labelMap[state.skills[skill]]}</span>
+            <select className="status-select" value={state.skills[skill]} onChange={e=>setStatus(skill, e.target.value)}>
+              <option value="not_started">Not Started</option>
+              <option value="learning">Learning</option>
+              <option value="can_do">Can Do</option>
+              <option value="confident">Confident</option>
+            </select>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+ 
+/* =========================================================================
+   PAGE: WEEKLY / MONTHLY REVIEW
+   ========================================================================= */
+function reviewWindow(state, days){
+  const entries = Object.entries(state.calendarLog)
+    .filter(([k]) => { const d = new Date(k); const cutoff = new Date(); cutoff.setDate(cutoff.getDate()-days); return d >= cutoff; })
+    .map(([,v])=>v);
+  const minutes = entries.reduce((a,e)=>a+e.minutes,0);
+  const lessons = entries.length;
+  const vocab = entries.reduce((a,e)=>a + (e.vocab? e.vocab.split(",").filter(Boolean).length:0), 0);
+  const kanji = entries.reduce((a,e)=>a + (e.kanji? e.kanji.split(",").filter(Boolean).length:0), 0);
+  const grammar = entries.reduce((a,e)=>a + (e.grammar? e.grammar.split(",").filter(Boolean).length:0), 0);
+  const listening = entries.filter(e=>e.listening).length;
+  const speaking = entries.filter(e=>e.speaking).length;
+  const areas = {Vocabulary:vocab, Kanji:kanji, Grammar:grammar, Listening:listening, Speaking:speaking};
+  const sorted = Object.entries(areas).sort((a,b)=>b[1]-a[1]);
+  const strongest = sorted[0][1] > 0 ? sorted[0][0] : "—";
+  const weakest = sorted[sorted.length-1][0];
+  return {minutes, lessons, vocab, kanji, grammar, listening, speaking, strongest, weakest};
+}
+ 
+function Reviews({derived}){
+  const w = reviewWindow(derived, 7);
+  return (
+    <div>
+      <div className="section-title">Weekly Review (last 7 days)</div>
+      <div className="grid grid-4">
+        <StatCard label="Total minutes" value={w.minutes} />
+        <StatCard label="Lessons completed" value={w.lessons} />
+        <StatCard label="Vocabulary learned" value={w.vocab} />
+        <StatCard label="Kanji learned" value={w.kanji} />
+        <StatCard label="Grammar learned" value={w.grammar} />
+        <StatCard label="Listening sessions" value={w.listening} />
+        <StatCard label="Speaking sessions" value={w.speaking} />
+        <StatCard label="Strongest area" value={w.strongest} foot={"Consider reviewing: " + w.weakest} />
+      </div>
+ 
+      <div className="section-title">Monthly Review (last 30 days)</div>
+      <div className="grid grid-4">
+        <StatCard label="Total learning time" value={fmtHours(reviewWindow(derived,30).minutes)} />
+        <StatCard label="Overall progress" value={overallProgress(derived)+"%"} />
+        <StatCard label="Hiragana" value={pct(derived.hiragana.mastered,derived.hiragana.total)+"%"} />
+        <StatCard label="Katakana" value={pct(derived.katakana.mastered,derived.katakana.total)+"%"} />
+        <StatCard label="Kanji count" value={derived.kanjiList.length} />
+        <StatCard label="Vocabulary count" value={derived.vocabulary.total} />
+        <StatCard label="Grammar concepts" value={derived.grammar.learned} />
+        <StatCard label="Listening time" value={fmtHours(derived.listening.minutes)} />
+        <StatCard label="Speaking sessions" value={derived.speaking.sessions} />
+        <StatCard label="Communication skills achieved" value={Object.values(derived.skills).filter(v=>v==="confident"||v==="can_do").length + " / " + SKILLS_DEF.length} />
+      </div>
+    </div>
+  );
+}
+ 
+/* =========================================================================
+   PAGE: ACHIEVEMENTS
+   ========================================================================= */
+function Achievements({derived}){
+  return (
+    <div>
+      <p className="muted" style={{marginBottom:14}}>Milestones based on real learning, never on consecutive days.</p>
+      <div className="grid grid-4">
+        {ACHIEVEMENT_DEF.map(a => {
+          const unlocked = a.test(derived);
+          return (
+            <div key={a.id} className={"card ach-card " + (unlocked?"":"locked")}>
+              <div className="ach-icon serif">{a.icon}</div>
+              <div className="ach-title">{a.title}</div>
+              <div className="ach-date">{unlocked ? (derived.achievementsUnlockedAt[a.id] || "Unlocked") : "Locked"}</div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+ 
+/* =========================================================================
+   ROOT APP
+   ========================================================================= */
+const PAGES = [
+  {key:"dashboard", label:"Dashboard", jp:"要"},
+  {key:"today", label:"Log a Day", jp:"今"},
+  {key:"kana", label:"Kana", jp:"あ"},
+  {key:"roadmap", label:"Roadmap", jp:"道"},
+  {key:"calendar", label:"Calendar", jp:"暦"},
+  {key:"kanji", label:"Kanji", jp:"漢"},
+  {key:"skills", label:"Can Say", jp:"話"},
+  {key:"reviews", label:"Reviews", jp:"評"},
+  {key:"achievements", label:"Achievements", jp:"賞"},
+];
+ 
+function App(){
+  const [state, setState] = useState(loadState);
+  const [page, setPage] = useState("dashboard");
+  const derived = useMemo(()=>withDerived(state), [state]);
+ 
+  useEffect(()=>{
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){ console.warn("Could not save progress.", e); }
+  }, [state]);
+ 
+  function resetAll(){
+    if(confirm("Reset all progress? This clears everything and cannot be undone.")){
+      setState(seedState());
+    }
+  }
+ 
+  const pageTitle = PAGES.find(p=>p.key===page);
+ 
+  return (
+    <div className="app-bg">
+      <div className="shell">
+        <div className="sidebar">
+          <div className="brand">
+            <div className="mark serif">継続</div>
+            <div className="sub">Nihongo Companion</div>
+          </div>
+          {PAGES.map(p => (
+            <button key={p.key} className={"navbtn " + (page===p.key ? "active":"")} onClick={()=>setPage(p.key)}>
+              <span className="jp">{p.jp}</span>{p.label}
+            </button>
+          ))}
+          <div style={{flex:1}}></div>
+          <button className="navbtn" onClick={resetAll} style={{color:"var(--shu)"}}>
+            <span className="jp">⟲</span>Reset data
+          </button>
+        </div>
+ 
+        <div className="main">
+          <div className="pagehead">
+            <div>
+              <h1>{pageTitle.label}</h1>
+              <div className="tagline">What Japanese can I actually understand and communicate now?</div>
+            </div>
+            <div className="today-pill">{new Date().toLocaleDateString(undefined,{weekday:"long", month:"short", day:"numeric"})}</div>
+          </div>
+ 
+          {page==="dashboard" && <Dashboard derived={derived} />}
+          {page==="today" && <TodaySession state={state} setState={setState} />}
+          {page==="kana" && <KanaPage state={state} setState={setState} />}
+          {page==="roadmap" && <Roadmap state={state} setState={setState} />}
+          {page==="calendar" && <Calendar state={state} />}
+          {page==="kanji" && <KanjiPage state={state} setState={setState} />}
+          {page==="skills" && <CommunicationSkills state={state} setState={setState} />}
+          {page==="reviews" && <Reviews derived={derived} />}
+          {page==="achievements" && <Achievements derived={derived} />}
+        </div>
+      </div>
+ 
+      <div className="mobile-nav">
+        {PAGES.map(p => (
+          <button key={p.key} className={"navbtn " + (page===p.key ? "active":"")} onClick={()=>setPage(p.key)}>
+            <span className="jp">{p.jp}</span>{p.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+ 
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
+ 
